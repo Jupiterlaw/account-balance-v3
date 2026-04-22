@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>account-ledger-mobile</title>
+  <style>
+    :root {
+      --text-xs:clamp(0.72rem,.68rem + .2vw,.82rem);
+      --text-sm:clamp(0.85rem,.8rem + .25vw,.95rem);
+      --text-base:clamp(0.95rem,.9rem + .25vw,1.05rem);
+      --text-lg:clamp(1.1rem,1rem + .5vw,1.3rem);
+      --sp1:.25rem;--sp2:.5rem;--sp3:.75rem;--sp4:1rem;--sp5:1.25rem;--sp6:1.5rem;--sp8:2rem;
+      --r-sm:.5rem;--r-md:.75rem;--r-lg:1rem;--r-xl:1.25rem;
+    }
+    :root,[data-theme="light"]{
+      --bg:#f5f4f0;--surf:#fff;--surf2:#f0ede8;--surf3:#e6e2dc;
+      --txt:#23201a;--muted:#706b62;--faint:#b0aaa2;
+      --bdr:rgba(40,35,25,.1);--div:rgba(40,35,25,.06);
+      --pri:#01696f;--pri-bg:#e6f2f1;--pri-dark:#0f3638;
+      --dr:#437a22;--dr-bg:#eaf2e4;
+      --cr:#964219;--cr-bg:#f7ece5;
+      --open-bg:#f0f8f7;--close-bg:#f4f9f0;
+      --sh:0 2px 8px rgba(30,25,10,.07),0 8px 24px rgba(30,25,10,.05);
+      --sh-lg:0 4px 16px rgba(30,25,10,.09),0 16px 40px rgba(30,25,10,.07);
+      --inp-bg:#fff;
+    }
+    [data-theme="dark"]{
+      --bg:#141210;--surf:#1c1a18;--surf2:#222018;--surf3:#2a2824;
+      --txt:#e8e4dc;--muted:#948f86;--faint:#5a5750;
+      --bdr:rgba(255,250,240,.08);--div:rgba(255,250,240,.05);
+      --pri:#5ab5bc;--pri-bg:#1a2f31;--pri-dark:#8fd4d9;
+      --dr:#8ec96a;--dr-bg:#1e2e18;
+      --cr:#dd8c5a;--cr-bg:#2e1e12;
+      --open-bg:#1a2e2f;--close-bg:#1e2b18;
+      --sh:0 2px 8px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.2);
+      --sh-lg:0 4px 16px rgba(0,0,0,.3),0 16px 40px rgba(0,0,0,.25);
+      --inp-bg:#242220;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{-webkit-text-size-adjust:none;text-size-adjust:none;scroll-behavior:smooth;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:var(--text-base);background:var(--bg);color:var(--txt);min-height:100dvh;line-height:1.5;padding-bottom:calc(env(safe-area-inset-bottom) + 340px);}
+    button,input,select{font:inherit;color:inherit;}
+
+    .topbar{
+      position:sticky;top:0;z-index:20;
+      background:color-mix(in srgb,var(--bg) 88%,transparent);
+      backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+      border-bottom:1px solid var(--bdr);
+      padding:calc(env(safe-area-inset-top) + .7rem) var(--sp4) .7rem;
+    }
+    .brand-row{display:flex;align-items:center;justify-content:space-between;gap:var(--sp3);}
+    .brand-title{font-size:var(--text-lg);font-weight:700;letter-spacing:-.01em;}
+    .brand-sub{font-size:var(--text-xs);color:var(--muted);margin-top:.1rem;}
+    .icon-btn{width:40px;height:40px;border-radius:999px;border:1px solid var(--bdr);background:var(--surf);display:flex;align-items:center;justify-content:center;font-size:1.05rem;cursor:pointer;flex-shrink:0;transition:background .18s;}
+    .icon-btn:hover{background:var(--surf2);}
+    .ctrl-row{display:grid;grid-template-columns:1fr auto auto;gap:var(--sp2);margin-top:var(--sp3);}
+    .month-sel,.search-inp{min-height:44px;border-radius:999px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);padding:0 1rem;font-size:var(--text-sm);width:100%;}
+    .search-row{margin-top:var(--sp2);}
+    .ref-btn{min-height:44px;padding:0 .9rem;border-radius:999px;border:1px solid var(--bdr);background:var(--surf);font-size:var(--text-sm);cursor:pointer;display:flex;align-items:center;gap:.3rem;white-space:nowrap;transition:background .18s;}
+    .ref-btn:hover{background:var(--surf2);}
+    .spin{display:inline-block;}
+    .spinning .spin{animation:spin .7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    .wrap{max-width:900px;margin:0 auto;padding:var(--sp4);}
+
+    .status-bar{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-lg);padding:var(--sp3) var(--sp4);margin-bottom:var(--sp4);display:flex;align-items:center;gap:.5rem;font-size:var(--text-sm);color:var(--muted);box-shadow:var(--sh);}
+    .sdot{width:8px;height:8px;border-radius:50%;background:var(--dr);flex-shrink:0;}
+    .sdot.loading{background:var(--faint);animation:pulse 1.2s ease-in-out infinite;}
+    .sdot.error{background:var(--cr);}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+    .legend{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2);margin-bottom:var(--sp4);}
+    .leg-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-md);padding:var(--sp3);box-shadow:var(--sh);}
+    .leg-lbl{font-size:var(--text-xs);color:var(--muted);margin-bottom:.2rem;}
+    .leg-val{font-size:var(--text-sm);font-weight:600;}
+    .leg-val.dr{color:var(--dr);}
+    .leg-val.cr{color:var(--cr);}
+
+    .card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow:hidden;margin-bottom:var(--sp4);}
+    .mhead{padding:var(--sp4);background:var(--surf2);border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp3);flex-wrap:wrap;}
+    .mhead h2{font-size:var(--text-lg);font-weight:700;}
+    .mhead p{font-size:var(--text-xs);color:var(--muted);margin-top:.2rem;}
+    .bal-pill{background:var(--pri-bg);color:var(--pri);border-radius:999px;padding:.3rem .9rem;font-size:var(--text-sm);font-weight:700;white-space:nowrap;flex-shrink:0;font-variant-numeric:tabular-nums;}
+    .bal-pill.neg{background:var(--cr-bg);color:var(--cr);}
+
+    .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    table{width:100%;border-collapse:collapse;min-width:640px;}
+    th,td{padding:.6rem .8rem;border-bottom:1px solid var(--div);text-align:left;font-size:var(--text-sm);}
+    th{font-size:var(--text-xs);color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:var(--surf);white-space:nowrap;}
+    td{white-space:nowrap;}
+    td.num{text-align:right;font-variant-numeric:tabular-nums;}
+    td.bal{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;}
+    tr:last-child td{border-bottom:none;}
+    tr.open-r{background:var(--open-bg);}
+    tr.close-r{background:var(--close-bg);}
+    tr.dr-r td.drv{color:var(--dr);}
+    tr.cr-r td.crv{color:var(--cr);}
+    td.bal.pos{color:var(--pri);}
+    td.bal.neg{color:var(--cr);}
+    tr.open-r td.bal,tr.close-r td.bal{color:var(--pri);}
+    tr.open-r td.bal.neg,tr.close-r td.bal.neg{color:var(--cr);}
+
+    .sum-sec{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-lg);box-shadow:var(--sh);overflow:hidden;margin-bottom:var(--sp4);}
+    .sum-head{padding:var(--sp3) var(--sp4);background:var(--surf2);border-bottom:1px solid var(--bdr);font-weight:700;font-size:var(--text-sm);}
+    .sum-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+    .sum-item{padding:var(--sp3) var(--sp4);border-bottom:1px solid var(--div);}
+    .sum-item:last-child{border-bottom:none;}
+    .s-lbl{font-size:var(--text-xs);color:var(--muted);}
+    .s-val{font-size:var(--text-sm);font-weight:700;font-variant-numeric:tabular-nums;margin-top:.2rem;}
+    .s-val.pos{color:var(--dr);}
+    .s-val.neg{color:var(--cr);}
+
+    .skel{height:1em;border-radius:.3rem;background:linear-gradient(90deg,var(--surf2) 25%,var(--surf3) 50%,var(--surf2) 75%);background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite;}
+    @keyframes shimmer{0%{background-position:-200% 0;}100%{background-position:200% 0;}}
+
+    /* BOTTOM FORM */
+    .form-panel{
+      position:fixed;bottom:0;left:0;right:0;z-index:30;
+      background:color-mix(in srgb,var(--bg) 96%,transparent);
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      border-top:1px solid var(--bdr);
+      padding:0 var(--sp4) calc(env(safe-area-inset-bottom) + var(--sp3));
+      transition:transform .3s cubic-bezier(.16,1,.3,1);
+    }
+    .form-panel.collapsed{transform:translateY(calc(100% - 52px));}
+    .form-toggle{
+      width:100%;height:52px;display:flex;align-items:center;justify-content:space-between;
+      background:none;border:none;cursor:pointer;gap:var(--sp2);
+      font-size:var(--text-sm);font-weight:600;color:var(--txt);padding:0;
+    }
+    .toggle-pill{background:var(--pri-bg);color:var(--pri);border-radius:999px;padding:.25rem .75rem;font-size:var(--text-xs);font-weight:700;}
+    .toggle-arrow{font-size:.9rem;transition:transform .25s;color:var(--muted);}
+    .form-panel.collapsed .toggle-arrow{transform:rotate(180deg);}
+    .form-body{padding-bottom:var(--sp2);}
+    .form-panel.collapsed .form-body{display:none;}
+    .fg{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2);}
+    .fg .full{grid-column:1/-1;}
+    .field{display:grid;gap:.3rem;}
+    .field label{font-size:var(--text-xs);color:var(--muted);font-weight:500;}
+    .field input,.field select{
+      min-height:44px;border-radius:var(--r-md);border:1px solid var(--bdr);
+      background:var(--inp-bg);color:var(--txt);padding:0 .85rem;
+      transition:border-color .18s,box-shadow .18s;-webkit-appearance:none;
+    }
+    .field input:focus,.field select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px color-mix(in srgb,var(--pri) 18%,transparent);}
+    .btn-row{display:grid;grid-template-columns:auto 1fr;gap:var(--sp2);margin-top:var(--sp3);}
+    .save-btn{min-height:48px;border-radius:var(--r-md);border:none;background:var(--pri);color:#fff;font-weight:700;font-size:var(--text-sm);cursor:pointer;padding:0 var(--sp5);transition:background .18s,transform .1s;white-space:nowrap;}
+    .save-btn:hover{background:var(--pri-dark);}
+    .save-btn:active{transform:scale(.98);}
+    .save-btn:disabled{opacity:.5;cursor:not-allowed;}
+    .clear-btn{min-height:48px;border-radius:var(--r-md);border:1px solid var(--bdr);background:var(--surf);font-size:var(--text-sm);cursor:pointer;transition:background .18s;padding:0 var(--sp4);}
+    .clear-btn:hover{background:var(--surf2);}
+
+    .toast{
+      position:fixed;top:calc(env(safe-area-inset-top) + 64px);left:50%;
+      transform:translateX(-50%) translateY(-8px);
+      background:var(--txt);color:var(--bg);border-radius:999px;
+      padding:.55rem 1.3rem;font-size:var(--text-sm);font-weight:500;
+      white-space:nowrap;opacity:0;pointer-events:none;
+      transition:opacity .22s,transform .22s;z-index:100;
+      box-shadow:var(--sh-lg);
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .toast.err{background:var(--cr);color:#fff;}
+    .toast.ok{background:var(--dr);color:#fff;}
+
+    @media(max-width:580px){
+      .ctrl-row{grid-template-columns:1fr 1fr;}
+      .ctrl-row .month-sel{grid-column:1/-1;}
+      .mhead{flex-direction:column;gap:var(--sp2);}
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand-row">
+    <div>
+      <div class="brand-title">借貸記錄</div>
+      <div class="brand-sub">自動同步 Google Sheet · Dr = 佢爭少咗 · Cr = 佢爭多咗</div>
+    </div>
+    <button class="icon-btn" data-theme-toggle aria-label="切換主題">🌙</button>
+  </div>
+  <div class="ctrl-row">
+    <select class="month-sel" id="monthSel"><option>載入中…</option></select>
+    <button class="ref-btn" id="refBtn"><span class="spin">↻</span> 更新</button>
+  </div>
+  <div class="search-row">
+    <input class="search-inp" id="searchInp" type="search" placeholder="搜尋項目 / 備註…" autocomplete="off"/>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="status-bar" id="sb">
+    <span class="sdot loading" id="sdot"></span>
+    <span id="stxt">正在載入 Google Sheet 數據…</span>
+  </div>
+
+  <div class="legend">
+    <div class="leg-card"><div class="leg-lbl">Dr. = 收入（佢爭你少咗）</div><div class="leg-val dr">減少欠款 ↓</div></div>
+    <div class="leg-card"><div class="leg-lbl">Cr. = 支出（佢爭你多咗）</div><div class="leg-val cr">增加欠款 ↑</div></div>
+  </div>
+
+  <div class="card">
+    <div class="mhead">
+      <div><h2 id="mTitle">載入中…</h2><p id="mMeta"></p></div>
+      <span class="bal-pill" id="balPill">—</span>
+    </div>
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th>日期</th><th>項目</th><th>備註</th>
+          <th style="text-align:right">Dr.</th>
+          <th style="text-align:right">Cr.</th>
+          <th style="text-align:right">總額</th>
+        </tr></thead>
+        <tbody id="tbody">
+          <tr><td><div class="skel" style="width:36px"></div></td><td><div class="skel" style="width:72px"></div></td><td><div class="skel" style="width:48px"></div></td><td><div class="skel" style="width:60px;margin-left:auto"></div></td><td></td><td><div class="skel" style="width:72px;margin-left:auto"></div></td></tr>
+          <tr><td><div class="skel" style="width:36px"></div></td><td><div class="skel" style="width:56px"></div></td><td></td><td></td><td><div class="skel" style="width:60px;margin-left:auto"></div></td><td><div class="skel" style="width:72px;margin-left:auto"></div></td></tr>
+          <tr><td></td><td><div class="skel" style="width:64px"></div></td><td><div class="skel" style="width:80px"></div></td><td></td><td><div class="skel" style="width:60px;margin-left:auto"></div></td><td><div class="skel" style="width:72px;margin-left:auto"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sum-sec" id="sumSec" style="display:none">
+    <div class="sum-head">本月摘要</div>
+    <div class="sum-grid" id="sumGrid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- BOTTOM FORM PANEL -->
+<div class="form-panel collapsed" id="formPanel">
+  <button class="form-toggle" id="formToggle" type="button">
+    <span>＋ 新增記錄 <span class="toggle-pill" id="curMonthChip">—</span></span>
+    <span class="toggle-arrow">▲</span>
+  </button>
+  <div class="form-body">
+    <div class="fg">
+      <div class="field">
+        <label for="fDate">日期</label>
+        <input id="fDate" type="text" placeholder="例如 22/4" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label for="fItem">項目 *</label>
+        <input id="fItem" type="text" placeholder="FPS / 泊車 / 五金" autocomplete="off"/>
+      </div>
+      <div class="field full">
+        <label for="fNote">備註</label>
+        <input id="fNote" type="text" placeholder="可留空" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label for="fType">類型</label>
+        <select id="fType">
+          <option value="dr">Dr. 收入（佢爭少）</option>
+          <option value="cr">Cr. 支出（佢爭多）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fAmt">金額 *</label>
+        <input id="fAmt" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="0.00"/>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button type="button" class="clear-btn" id="clearBtn">清除</button>
+      <button type="button" class="save-btn" id="saveBtn">✓ 寫入 Google Sheet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const API = 'https://script.google.com/macros/s/AKfycbzFR47eT1SwiceA6sD55wcRQtF407-IhIM1kXDk6n79fT8gGsHAflLp8eI45Ykf7kpUhg/exec';
+// ────────────────────────────────────────────────────────
+
+let allData = {}, sortedKeys = [], curKey = '', searchTerm = '';
+
+function parseKey(n) {
+  n = (n||'').replace(/\s+/g,'').replace(/\n/g,'');
+  let m = n.match(/^(\d{4})年(\d{1,2})月/);
+  if (m) return {y:+m[1],mo:+m[2]};
+  m = n.match(/^(\d{1,2})月(\d{4})/);
+  if (m) return {y:+m[2],mo:+m[1]};
+  m = n.match(/^(\d{1,2})月$/);
+  if (m) return {y:2025,mo:+m[1]};
+  return null;
+}
+
+function sortKeys(keys) {
+  return keys
+    .filter(k => parseKey(k) && !k.includes('副本'))
+    .sort((a,b)=>{
+      const pa=parseKey(a),pb=parseKey(b);
+      if(!pa||!pb) return 0;
+      return pa.y!==pb.y ? pa.y-pb.y : pa.mo-pb.mo;
+    });
+}
+
+function isNeg(s){ return s && s.toString().trim().startsWith('-'); }
+function toNum(s){ if(!s) return 0; const n=parseFloat(s.toString().replace(/[$,]/g,'')); return isNaN(n)?0:n; }
+function fmt(n){ return (n<0?'-$':'$')+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function showToast(msg, type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show'+(type?' '+type:'');
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.className='toast',3000);
+}
+
+function setStatus(type,txt){
+  document.getElementById('sdot').className='sdot'+(type==='loading'?' loading':type==='error'?' error':'');
+  document.getElementById('stxt').textContent=txt;
+}
+
+function renderMonth(key){
+  const rows=allData[key];
+  document.getElementById('curMonthChip').textContent=key.replace(/\s+/g,' ').trim();
+  if(!rows||rows.length<2){
+    document.getElementById('tbody').innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);font-size:var(--text-sm)">沒有資料</td></tr>';
+    return;
+  }
+  const dataRows=rows.slice(1);
+  const kw=searchTerm.toLowerCase();
+
+  let lastBal='';
+  for(let i=dataRows.length-1;i>=0;i--){
+    if(dataRows[i][5]&&dataRows[i][5]!==''){lastBal=dataRows[i][5];break;}
+  }
+
+  document.getElementById('mTitle').textContent=key.replace(/\s+/g,' ').trim();
+  document.getElementById('mMeta').textContent='月初承接上月尾數 · 月尾保留家用 Dr. $5,000';
+  const pill=document.getElementById('balPill');
+  pill.textContent=lastBal||'—';
+  pill.className='bal-pill'+(isNeg(lastBal)?' neg':'');
+
+  let tDr=0,tCr=0;
+  dataRows.forEach(r=>{tDr+=toNum(r[3]);tCr+=toNum(r[4]);});
+  const net=tDr-tCr;
+  document.getElementById('sumSec').style.display='';
+  document.getElementById('sumGrid').innerHTML=`
+    <div class="sum-item"><div class="s-lbl">總 Dr.（收入）</div><div class="s-val pos">${fmt(tDr)}</div></div>
+    <div class="sum-item"><div class="s-lbl">總 Cr.（支出）</div><div class="s-val neg">${fmt(tCr)}</div></div>
+    <div class="sum-item"><div class="s-lbl">本月淨變動</div><div class="s-val ${net<0?'neg':'pos'}">${fmt(net)}</div></div>
+    <div class="sum-item"><div class="s-lbl">月尾總額</div><div class="s-val ${isNeg(lastBal)?'neg':'pos'}">${lastBal||'—'}</div></div>
+  `;
+
+  const filtered=dataRows.filter(r=>!kw||(r[0]+r[1]+r[2]+r[3]+r[4]+r[5]).toLowerCase().includes(kw));
+  if(!filtered.length){
+    document.getElementById('tbody').innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);font-size:var(--text-sm)">沒有符合記錄</td></tr>';
+    return;
+  }
+  document.getElementById('tbody').innerHTML=filtered.map(r=>{
+    const [date,item,note,dr,cr,bal]=r;
+    const isOpen=(!date||date==='')&&(item||'').includes('尾數');
+    const isClose=item==='家用';
+    const hasDr=dr&&dr!==''; const hasCr=cr&&cr!=='';
+    const cls=[isOpen?'open-r':'',isClose?'close-r':'',hasDr?'dr-r':'',hasCr?'cr-r':''].filter(Boolean).join(' ');
+    return `<tr class="${cls}">
+      <td>${date||''}</td><td>${item||''}</td>
+      <td style="color:var(--muted)">${note||''}</td>
+      <td class="num drv">${hasDr?dr:''}</td>
+      <td class="num crv">${hasCr?cr:''}</td>
+      <td class="bal ${isNeg(bal)?'neg':'pos'}">${bal||''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function populateSel(){
+  const sel=document.getElementById('monthSel');
+  sel.innerHTML=sortedKeys.map(k=>`<option value="${k}">${k.replace(/\s+/g,' ').trim()}</option>`).join('');
+  sel.value=curKey;
+}
+
+async function loadData(){
+  const btn=document.getElementById('refBtn');
+  btn.classList.add('spinning');
+  setStatus('loading','正在從 Google Sheet 載入最新數據…');
+  try {
+    // Use no-cors-safe GET with jsonp-style via script tag for read
+    const res=await fetch(API+'?action=read',{method:'GET'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const json=await res.json();
+    allData=json;
+    sortedKeys=sortKeys(Object.keys(allData));
+    if(!sortedKeys.length) throw new Error('找不到有效月份 Tab');
+    if(!curKey||!sortedKeys.includes(curKey)) curKey=sortedKeys[sortedKeys.length-1];
+    populateSel();
+    renderMonth(curKey);
+    const now=new Date().toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'});
+    setStatus('ok',`已同步 · ${now} · 共 ${sortedKeys.length} 個月份`);
+  } catch(e){
+    setStatus('error','載入失敗：'+e.message);
+    showToast('載入失敗：'+e.message,'err');
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+// ── WRITE via GET params (avoids CORS preflight) ──────
+async function writeEntry(payload){
+  const params=new URLSearchParams({
+    action:'write',
+    sheetName: payload.sheetName,
+    date:      payload.date||'',
+    item:      payload.item||'',
+    note:      payload.note||'',
+    dr:        payload.dr||0,
+    cr:        payload.cr||0
+  });
+  // Use fetch GET — Apps Script doGet handles action=write
+  const res=await fetch(API+'?'+params.toString(),{method:'GET'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return await res.json();
+}
+
+// ── FORM ──────────────────────────────────────────────
+const panel=document.getElementById('formPanel');
+document.getElementById('formToggle').addEventListener('click',()=>{
+  panel.classList.toggle('collapsed');
+});
+
+document.getElementById('clearBtn').addEventListener('click',()=>{
+  ['fDate','fItem','fNote','fAmt'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fType').value='dr';
+});
+
+document.getElementById('saveBtn').addEventListener('click', async()=>{
+  const item=document.getElementById('fItem').value.trim();
+  const amt=parseFloat(document.getElementById('fAmt').value);
+  if(!item){showToast('請填寫項目','err');document.getElementById('fItem').focus();return;}
+  if(!amt||amt<=0){showToast('請填寫正確金額','err');document.getElementById('fAmt').focus();return;}
+
+  const type=document.getElementById('fType').value;
+  const btn=document.getElementById('saveBtn');
+  btn.disabled=true; btn.textContent='儲存中…';
+
+  try {
+    const result=await writeEntry({
+      sheetName: curKey,
+      date:  document.getElementById('fDate').value.trim(),
+      item,
+      note:  document.getElementById('fNote').value.trim(),
+      dr:    type==='dr'?amt:0,
+      cr:    type==='cr'?amt:0
+    });
+    if(result.success){
+      showToast('✓ 已儲存！新總額：'+result.balance,'ok');
+      ['fDate','fItem','fNote','fAmt'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('fType').value='dr';
+      panel.classList.add('collapsed');
+      await loadData();
+    } else {
+      throw new Error(result.error||'未知錯誤');
+    }
+  } catch(err){
+    showToast('儲存失敗：'+err.message,'err');
+  } finally {
+    btn.disabled=false; btn.textContent='✓ 寫入 Google Sheet';
+  }
+});
+
+document.getElementById('monthSel').addEventListener('change',e=>{curKey=e.target.value;renderMonth(curKey);});
+document.getElementById('searchInp').addEventListener('input',e=>{searchTerm=e.target.value.trim();if(curKey)renderMonth(curKey);});
+document.getElementById('refBtn').addEventListener('click',loadData);
+
+// ── THEME ─────────────────────────────────────────────
+(function(){
+  const btn=document.querySelector('[data-theme-toggle]');
+  const html=document.documentElement;
+  let dark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  html.setAttribute('data-theme',dark?'dark':'light');
+  btn.textContent=dark?'☀️':'🌙';
+  btn.addEventListener('click',()=>{dark=!dark;html.setAttribute('data-theme',dark?'dark':'light');btn.textContent=dark?'☀️':'🌙';});
+})();
+
+loadData();
+</script>
+</body>
+</html>
