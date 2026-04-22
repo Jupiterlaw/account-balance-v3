@@ -448,8 +448,8 @@ document.getElementById('saveBtn').addEventListener('click', async()=>{
       dr:    type==='dr'?amt:0,
       cr:    type==='cr'?amt:0
     });
-    if(result.success){
-      showToast('✓ 已儲存！新總額：'+result.balance,'ok');
+    if(result.status==='ok'){
+      showToast('✓ 已儲存！新總額：'+result.newTotal,'ok');
       ['fDate','fItem','fNote','fAmt'].forEach(id=>document.getElementById(id).value='');
       document.getElementById('fType').value='dr';
       panel.classList.add('collapsed');
