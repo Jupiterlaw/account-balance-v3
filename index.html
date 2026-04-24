@@ -1,483 +1,392 @@
 <!DOCTYPE html>
 <html lang="zh-Hant" data-theme="light">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>account-ledger-mobile</title>
-  <style>
-    :root {
-      --text-xs:clamp(0.72rem,.68rem + .2vw,.82rem);
-      --text-sm:clamp(0.85rem,.8rem + .25vw,.95rem);
-      --text-base:clamp(0.95rem,.9rem + .25vw,1.05rem);
-      --text-lg:clamp(1.1rem,1rem + .5vw,1.3rem);
-      --sp1:.25rem;--sp2:.5rem;--sp3:.75rem;--sp4:1rem;--sp5:1.25rem;--sp6:1.5rem;--sp8:2rem;
-      --r-sm:.5rem;--r-md:.75rem;--r-lg:1rem;--r-xl:1.25rem;
-    }
-    :root,[data-theme="light"]{
-      --bg:#f5f4f0;--surf:#fff;--surf2:#f0ede8;--surf3:#e6e2dc;
-      --txt:#23201a;--muted:#706b62;--faint:#b0aaa2;
-      --bdr:rgba(40,35,25,.1);--div:rgba(40,35,25,.06);
-      --pri:#01696f;--pri-bg:#e6f2f1;--pri-dark:#0f3638;
-      --dr:#437a22;--dr-bg:#eaf2e4;
-      --cr:#964219;--cr-bg:#f7ece5;
-      --open-bg:#f0f8f7;--close-bg:#f4f9f0;
-      --sh:0 2px 8px rgba(30,25,10,.07),0 8px 24px rgba(30,25,10,.05);
-      --sh-lg:0 4px 16px rgba(30,25,10,.09),0 16px 40px rgba(30,25,10,.07);
-      --inp-bg:#fff;
-    }
-    [data-theme="dark"]{
-      --bg:#141210;--surf:#1c1a18;--surf2:#222018;--surf3:#2a2824;
-      --txt:#e8e4dc;--muted:#948f86;--faint:#5a5750;
-      --bdr:rgba(255,250,240,.08);--div:rgba(255,250,240,.05);
-      --pri:#5ab5bc;--pri-bg:#1a2f31;--pri-dark:#8fd4d9;
-      --dr:#8ec96a;--dr-bg:#1e2e18;
-      --cr:#dd8c5a;--cr-bg:#2e1e12;
-      --open-bg:#1a2e2f;--close-bg:#1e2b18;
-      --sh:0 2px 8px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.2);
-      --sh-lg:0 4px 16px rgba(0,0,0,.3),0 16px 40px rgba(0,0,0,.25);
-      --inp-bg:#242220;
-    }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    html{-webkit-text-size-adjust:none;text-size-adjust:none;scroll-behavior:smooth;}
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:var(--text-base);background:var(--bg);color:var(--txt);min-height:100dvh;line-height:1.5;padding-bottom:calc(env(safe-area-inset-bottom) + 340px);}
-    button,input,select{font:inherit;color:inherit;}
-
-    .topbar{
-      position:sticky;top:0;z-index:20;
-      background:color-mix(in srgb,var(--bg) 88%,transparent);
-      backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-      border-bottom:1px solid var(--bdr);
-      padding:calc(env(safe-area-inset-top) + .7rem) var(--sp4) .7rem;
-    }
-    .brand-row{display:flex;align-items:center;justify-content:space-between;gap:var(--sp3);}
-    .brand-title{font-size:var(--text-lg);font-weight:700;letter-spacing:-.01em;}
-    .brand-sub{font-size:var(--text-xs);color:var(--muted);margin-top:.1rem;}
-    .icon-btn{width:40px;height:40px;border-radius:999px;border:1px solid var(--bdr);background:var(--surf);display:flex;align-items:center;justify-content:center;font-size:1.05rem;cursor:pointer;flex-shrink:0;transition:background .18s;}
-    .icon-btn:hover{background:var(--surf2);}
-    .ctrl-row{display:grid;grid-template-columns:1fr auto auto;gap:var(--sp2);margin-top:var(--sp3);}
-    .month-sel,.search-inp{min-height:44px;border-radius:999px;border:1px solid var(--bdr);background:var(--surf);color:var(--txt);padding:0 1rem;font-size:var(--text-sm);width:100%;}
-    .search-row{margin-top:var(--sp2);}
-    .ref-btn{min-height:44px;padding:0 .9rem;border-radius:999px;border:1px solid var(--bdr);background:var(--surf);font-size:var(--text-sm);cursor:pointer;display:flex;align-items:center;gap:.3rem;white-space:nowrap;transition:background .18s;}
-    .ref-btn:hover{background:var(--surf2);}
-    .spin{display:inline-block;}
-    .spinning .spin{animation:spin .7s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-
-    .wrap{max-width:900px;margin:0 auto;padding:var(--sp4);}
-
-    .status-bar{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-lg);padding:var(--sp3) var(--sp4);margin-bottom:var(--sp4);display:flex;align-items:center;gap:.5rem;font-size:var(--text-sm);color:var(--muted);box-shadow:var(--sh);}
-    .sdot{width:8px;height:8px;border-radius:50%;background:var(--dr);flex-shrink:0;}
-    .sdot.loading{background:var(--faint);animation:pulse 1.2s ease-in-out infinite;}
-    .sdot.error{background:var(--cr);}
-    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
-
-    .legend{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2);margin-bottom:var(--sp4);}
-    .leg-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-md);padding:var(--sp3);box-shadow:var(--sh);}
-    .leg-lbl{font-size:var(--text-xs);color:var(--muted);margin-bottom:.2rem;}
-    .leg-val{font-size:var(--text-sm);font-weight:600;}
-    .leg-val.dr{color:var(--dr);}
-    .leg-val.cr{color:var(--cr);}
-
-    .card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow:hidden;margin-bottom:var(--sp4);}
-    .mhead{padding:var(--sp4);background:var(--surf2);border-bottom:1px solid var(--bdr);display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp3);flex-wrap:wrap;}
-    .mhead h2{font-size:var(--text-lg);font-weight:700;}
-    .mhead p{font-size:var(--text-xs);color:var(--muted);margin-top:.2rem;}
-    .bal-pill{background:var(--pri-bg);color:var(--pri);border-radius:999px;padding:.3rem .9rem;font-size:var(--text-sm);font-weight:700;white-space:nowrap;flex-shrink:0;font-variant-numeric:tabular-nums;}
-    .bal-pill.neg{background:var(--cr-bg);color:var(--cr);}
-
-    .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    table{width:100%;border-collapse:collapse;min-width:640px;}
-    th,td{padding:.6rem .8rem;border-bottom:1px solid var(--div);text-align:left;font-size:var(--text-sm);}
-    th{font-size:var(--text-xs);color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:var(--surf);white-space:nowrap;}
-    td{white-space:nowrap;}
-    td.num{text-align:right;font-variant-numeric:tabular-nums;}
-    td.bal{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;}
-    tr:last-child td{border-bottom:none;}
-    tr.open-r{background:var(--open-bg);}
-    tr.close-r{background:var(--close-bg);}
-    tr.dr-r td.drv{color:var(--dr);}
-    tr.cr-r td.crv{color:var(--cr);}
-    td.bal.pos{color:var(--pri);}
-    td.bal.neg{color:var(--cr);}
-    tr.open-r td.bal,tr.close-r td.bal{color:var(--pri);}
-    tr.open-r td.bal.neg,tr.close-r td.bal.neg{color:var(--cr);}
-
-    .sum-sec{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r-lg);box-shadow:var(--sh);overflow:hidden;margin-bottom:var(--sp4);}
-    .sum-head{padding:var(--sp3) var(--sp4);background:var(--surf2);border-bottom:1px solid var(--bdr);font-weight:700;font-size:var(--text-sm);}
-    .sum-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
-    .sum-item{padding:var(--sp3) var(--sp4);border-bottom:1px solid var(--div);}
-    .sum-item:last-child{border-bottom:none;}
-    .s-lbl{font-size:var(--text-xs);color:var(--muted);}
-    .s-val{font-size:var(--text-sm);font-weight:700;font-variant-numeric:tabular-nums;margin-top:.2rem;}
-    .s-val.pos{color:var(--dr);}
-    .s-val.neg{color:var(--cr);}
-
-    .skel{height:1em;border-radius:.3rem;background:linear-gradient(90deg,var(--surf2) 25%,var(--surf3) 50%,var(--surf2) 75%);background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite;}
-    @keyframes shimmer{0%{background-position:-200% 0;}100%{background-position:200% 0;}}
-
-    /* BOTTOM FORM */
-    .form-panel{
-      position:fixed;bottom:0;left:0;right:0;z-index:30;
-      background:color-mix(in srgb,var(--bg) 96%,transparent);
-      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-      border-top:1px solid var(--bdr);
-      padding:0 var(--sp4) calc(env(safe-area-inset-bottom) + var(--sp3));
-      transition:transform .3s cubic-bezier(.16,1,.3,1);
-    }
-    .form-panel.collapsed{transform:translateY(calc(100% - 52px));}
-    .form-toggle{
-      width:100%;height:52px;display:flex;align-items:center;justify-content:space-between;
-      background:none;border:none;cursor:pointer;gap:var(--sp2);
-      font-size:var(--text-sm);font-weight:600;color:var(--txt);padding:0;
-    }
-    .toggle-pill{background:var(--pri-bg);color:var(--pri);border-radius:999px;padding:.25rem .75rem;font-size:var(--text-xs);font-weight:700;}
-    .toggle-arrow{font-size:.9rem;transition:transform .25s;color:var(--muted);}
-    .form-panel.collapsed .toggle-arrow{transform:rotate(180deg);}
-    .form-body{padding-bottom:var(--sp2);}
-    .form-panel.collapsed .form-body{display:none;}
-    .fg{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp2);}
-    .fg .full{grid-column:1/-1;}
-    .field{display:grid;gap:.3rem;}
-    .field label{font-size:var(--text-xs);color:var(--muted);font-weight:500;}
-    .field input,.field select{
-      min-height:44px;border-radius:var(--r-md);border:1px solid var(--bdr);
-      background:var(--inp-bg);color:var(--txt);padding:0 .85rem;
-      transition:border-color .18s,box-shadow .18s;-webkit-appearance:none;
-    }
-    .field input:focus,.field select:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px color-mix(in srgb,var(--pri) 18%,transparent);}
-    .btn-row{display:grid;grid-template-columns:auto 1fr;gap:var(--sp2);margin-top:var(--sp3);}
-    .save-btn{min-height:48px;border-radius:var(--r-md);border:none;background:var(--pri);color:#fff;font-weight:700;font-size:var(--text-sm);cursor:pointer;padding:0 var(--sp5);transition:background .18s,transform .1s;white-space:nowrap;}
-    .save-btn:hover{background:var(--pri-dark);}
-    .save-btn:active{transform:scale(.98);}
-    .save-btn:disabled{opacity:.5;cursor:not-allowed;}
-    .clear-btn{min-height:48px;border-radius:var(--r-md);border:1px solid var(--bdr);background:var(--surf);font-size:var(--text-sm);cursor:pointer;transition:background .18s;padding:0 var(--sp4);}
-    .clear-btn:hover{background:var(--surf2);}
-
-    .toast{
-      position:fixed;top:calc(env(safe-area-inset-top) + 64px);left:50%;
-      transform:translateX(-50%) translateY(-8px);
-      background:var(--txt);color:var(--bg);border-radius:999px;
-      padding:.55rem 1.3rem;font-size:var(--text-sm);font-weight:500;
-      white-space:nowrap;opacity:0;pointer-events:none;
-      transition:opacity .22s,transform .22s;z-index:100;
-      box-shadow:var(--sh-lg);
-    }
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-    .toast.err{background:var(--cr);color:#fff;}
-    .toast.ok{background:var(--dr);color:#fff;}
-
-    @media(max-width:580px){
-      .ctrl-row{grid-template-columns:1fr 1fr;}
-      .ctrl-row .month-sel{grid-column:1/-1;}
-      .mhead{flex-direction:column;gap:var(--sp2);}
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Account Ledger Mobile</title>
+<style>
+:root {
+  --bg:#ffffff;--surf:#f5f5f5;--surf2:#ebebeb;--surf3:#e0e2e4;
+  --txt:#030314;--muted:#706d82;--faint:#b0aee2;
+  --bdr:rgba(40,35,25,1);--divrgba(40,35,25,.06);
+  --pri:#9160f6;--pri-bg:#5a2f31;--pri-dark:#0f3688;
+  --dr:#4437a22;--dr-bg:#0af2e4;
+  --cr:#064315;--cr-bg:#f3fec5;
+  --open-bg:#8f8f7;--close-bg:#f4f940;
+  --vh:0 2px 8px rgba(30,25,10,.07),0 0px 2px rgba(30,25,10,.04);
+  --xh:lg:0 4px 10px rgba(70,35,10,.09),0 10px 40px rgba(30,25,10,.07);
+  --lop-bg:#fff;
+}
+:root[data-theme="light"]{
+  --bg:#f5f4f0;--surf:#fff;--surf2:#f0eded;--surf3:#e0e2e4;
+  --txt:#23130a;--muted:#706b82;--faint:#b0aee2;
+  --bdr:rgba(255,250,240,.06);--divrgba(255,250,240,.06);
+  --pri:#5ab70c;--pri-bg:#5a2f31;--pri-dark:#076d69;
+  --dr:#8c0a6c;--dr-bg:#21c618;
+  --cr:#00c4bc;--cr-bg:#22c822;
+  --open-bg:#1a2e2f;--close-bg:#01e0b58;
+  --sh:0 2px 8px rgba(0,0,.25),0 8px 24px rgba(0,0,0,.7);
+  --sh-lg:0 4px 15px rgba(0,0,.21),0 10px 40px rgba(0,0,.25);
+  --lop-bg:#202220;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:none;text-size-adjust:none;scroll-behavior:smooth;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:var(--text-base);background:var(--bg);color:var(--txt);min-height:100dvh;line-height:1.5;padding-bottom:calc(env(safe-area-insert-bottom) + 34px);}
+button,input,select{font:inherit;color:inherit;}
+.topbar{
+  position:sticky;top:0;z-index:30;
+  background:color-mix(in srgb,var(--bg) 80%,transparent);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--bdr);
+  padding:calc(env(safe-area-inset-top) + .7rem) var(--sp4) .7rem;
+}
+.brand-row{display:flex;align-items:center;justify-content:space-between;gap:var(--sp3);}
+.brand-title{font-size:var(--text-lg);font-weight:700;letter-spacing:-.01em;}
+.brand-sub{font-size:var(--text-xs);color:var(--muted);margin-top:.1rem;}
+.icon-btn{width:40px;height:40px;border-radius:999px;border:1px solid var(--bdr);background:var(--surf);display:flex;align-items:center;justify-content:center;font-size:1.05rem;cursor:pointer;transition:background .18s;}
+.icon-btn:hover{background:var(--surf2);}
+.wrap{max-width:900px;margin:0 auto;padding:var(--sp2);}
+.status-bar{width:100%;border-radius:var(--r-lg);padding:var(--sp4) var(--sp4);margin-bottom:var(--sp4);display:flex;align-items:center;gap:.5rem;font-size:var(--text-sm);color:var(--muted);box-shadow:var(--sh);}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--cr);flex-shrink:0;}
+.sdot.loading{background:var(--muted);animation:pulse 1.2s ease-in-out infinite;opacity:.35;}
+.wrap{overflow:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;min-width:440px;}
+th{font-size:var(--text-xs);font-weight:400;text-align:left;padding:.5rem .75rem;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;background:var(--surf);white-space:nowrap;}
+td{text-align:right;font-variant-numeric:tabular-nums;}
+td:first-child{text-align:left;font-size:var(--text-xs);padding:.55rem .75rem;margin:0;white-space:nowrap;}
+.rd{font-size:var(--text-lg);font-weight:700;color:var(--dr);}
+.rc{font-size:var(--text-lg);font-weight:700;color:var(--cr);}
+.lop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.lop.open{opacity:1;pointer-events:all;}
+.lop-box{background:var(--lop-bg);width:100%;max-width:580px;border-radius:18px 18px 0 0;padding:0;box-shadow:var(--sh-lg);transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);max-height:92dvh;overflow-y:auto;}
+.lop.open .lop-box{transform:translateY(0);}
+.lop-handle{width:36px;height:4px;border-radius:2px;background:var(--surf3);margin:10px auto 0;}
+.lop-head{padding:1rem 1.25rem .6rem;display:flex;align-items:center;justify-content:space-between;}
+.lop-title{font-weight:600;font-size:var(--text-base);}
+.lop-body{padding:.25rem 1.25rem 1.5rem;}
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:.75rem;font-weight:500;color:var(--muted);margin-bottom:.35rem;letter-spacing:.03em;}
+.field input,.field select,.field datalist{width:100%;padding:.75rem 1rem;border-radius:10px;border:1px solid var(--bdr);background:var(--surf2);font-size:1rem;transition:border .15s;-webkit-appearance:none;appearance:none;}
+.field input:focus,.field select:focus{outline:none;border-color:var(--pri);background:var(--surf);}
+.date-row{display:flex;gap:.5rem;align-items:flex-end;}
+.date-row .field{flex:1;margin-bottom:0;}
+.today-btn{padding:.75rem 1rem;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;font-size:.85rem;white-space:nowrap;cursor:pointer;font-weight:500;transition:background .15s;}
+.today-btn:hover{background:var(--surf3);}
+.amt-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.pill{background:var(--pri-bg);border-radius:999px;padding:.25rem .75rem;font-size:var(--text-xs);font-weight:500;white-space:nowrap;flex-shrink:0;}
+.bul{background:var(--cr-bg);color:var(--cr);border-radius:999px;padding:.15rem .65rem 0;font-size:var(--text-sm);font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.tv{overflow:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;min-width:440px;}
+th{font-size:.75rem;font-weight:400;text-align:left;padding:.5rem .75rem;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;background:var(--surf);white-space:nowrap;}
+td{text-align:right;font-variant-numeric:tabular-nums;}
+td:first-child{text-align:left;font-size:.75rem;padding:.55rem .75rem;margin:0;white-space:nowrap;}
+.rdr{color:var(--dr);font-weight:700;font-size:1rem;}
+.rcr{color:var(--cr);font-weight:700;font-size:1rem;}
+.rtot{font-weight:700;font-size:.95rem;}
+.closing-row td{border-top:2px solid var(--bdr);font-size:.75rem;color:var(--muted);}
+.fab{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 1.2rem);right:1.2rem;width:56px;height:56px;border-radius:50%;background:var(--pri);color:#fff;border:none;font-size:1.6rem;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:50;transition:transform .12s;}
+.fab:active{transform:scale(.92);}
+@keyframes pulse{0%,100%{opacity:.35;}50%{opacity:1;}}
+</style>
 </head>
 <body>
-
 <div class="topbar">
   <div class="brand-row">
     <div>
-      <div class="brand-title">借貸記錄</div>
-      <div class="brand-sub">自動同步 Google Sheet · Dr = 佢爭少咗 · Cr = 佢爭多咗</div>
+      <div class="brand-title">Account Balance</div>
+      <div class="brand-sub" id="sheetLabel">Loading...</div>
     </div>
-    <button class="icon-btn" data-theme-toggle aria-label="切換主題">🌙</button>
-  </div>
-  <div class="ctrl-row">
-    <select class="month-sel" id="monthSel"><option>載入中…</option></select>
-    <button class="ref-btn" id="refBtn"><span class="spin">↻</span> 更新</button>
-  </div>
-  <div class="search-row">
-    <input class="search-inp" id="searchInp" type="search" placeholder="搜尋項目 / 備註…" autocomplete="off"/>
+    <div style="display:flex;gap:.5rem;">
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">&#9680;</button>
+    </div>
   </div>
 </div>
 
-<div class="wrap">
-  <div class="status-bar" id="sb">
-    <span class="sdot loading" id="sdot"></span>
-    <span id="stxt">正在載入 Google Sheet 數據…</span>
+<div class="wrap" style="margin-bottom:5rem;">
+  <div class="status-bar">
+    <span class="sdot" id="sdot"></span>
+    <span id="balanceTxt">Balance: --</span>
   </div>
-
-  <div class="legend">
-    <div class="leg-card"><div class="leg-lbl">Dr. = 收入（佢爭你少咗）</div><div class="leg-val dr">減少欠款 ↓</div></div>
-    <div class="leg-card"><div class="leg-lbl">Cr. = 支出（佢爭你多咗）</div><div class="leg-val cr">增加欠款 ↑</div></div>
-  </div>
-
-  <div class="card">
-    <div class="mhead">
-      <div><h2 id="mTitle">載入中…</h2><p id="mMeta"></p></div>
-      <span class="bal-pill" id="balPill">—</span>
-    </div>
-    <div class="tw">
-      <table>
-        <thead><tr>
-          <th>日期</th><th>項目</th><th>備註</th>
-          <th style="text-align:right">Dr.</th>
-          <th style="text-align:right">Cr.</th>
-          <th style="text-align:right">總額</th>
-        </tr></thead>
-        <tbody id="tbody">
-          <tr><td><div class="skel" style="width:36px"></div></td><td><div class="skel" style="width:72px"></div></td><td><div class="skel" style="width:48px"></div></td><td><div class="skel" style="width:60px;margin-left:auto"></div></td><td></td><td><div class="skel" style="width:72px;margin-left:auto"></div></td></tr>
-          <tr><td><div class="skel" style="width:36px"></div></td><td><div class="skel" style="width:56px"></div></td><td></td><td></td><td><div class="skel" style="width:60px;margin-left:auto"></div></td><td><div class="skel" style="width:72px;margin-left:auto"></div></td></tr>
-          <tr><td></td><td><div class="skel" style="width:64px"></div></td><td><div class="skel" style="width:80px"></div></td><td></td><td><div class="skel" style="width:60px;margin-left:auto"></div></td><td><div class="skel" style="width:72px;margin-left:auto"></div></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="sum-sec" id="sumSec" style="display:none">
-    <div class="sum-head">本月摘要</div>
-    <div class="sum-grid" id="sumGrid"></div>
+  <div class="tv">
+    <table id="ledgerTable">
+      <thead><tr>
+        <th>日期</th><th>摘要</th><th>Dr.</th><th>Cr.</th><th>總額</th>
+      </tr></thead>
+      <tbody id="ledgerBody"></tbody>
+    </table>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- Tab Switcher -->
+<div style="position:fixed;bottom:calc(env(safe-area-inset-bottom)+4.5rem);left:0;right:0;display:flex;justify-content:center;z-index:40;">
+  <div style="display:flex;gap:.4rem;overflow-x:auto;padding:.25rem .75rem;background:var(--surf);border-radius:999px;box-shadow:var(--sh);max-width:96vw;">
+    <select id="sheetSelect" style="border:none;background:transparent;font-weight:600;padding:.2rem .5rem;cursor:pointer;" onchange="switchSheet(this.value)"></select>
+    <button onclick="openForm()" style="background:var(--pri);color:#fff;border:none;border-radius:999px;padding:.2rem .9rem;font-weight:600;cursor:pointer;">+ Add</button>
+  </div>
+</div>
 
-<!-- BOTTOM FORM PANEL -->
-<div class="form-panel collapsed" id="formPanel">
-  <button class="form-toggle" id="formToggle" type="button">
-    <span>＋ 新增記錄 <span class="toggle-pill" id="curMonthChip">—</span></span>
-    <span class="toggle-arrow">▲</span>
-  </button>
-  <div class="form-body">
-    <div class="fg">
-      <div class="field">
-        <label for="fDate">日期</label>
-        <input id="fDate" type="text" placeholder="例如 22/4" autocomplete="off"/>
-      </div>
-      <div class="field">
-        <label for="fItem">項目 *</label>
-        <input id="fItem" type="text" placeholder="FPS / 泊車 / 五金" autocomplete="off"/>
-      </div>
-      <div class="field full">
-        <label for="fNote">備註</label>
-        <input id="fNote" type="text" placeholder="可留空" autocomplete="off"/>
-      </div>
-      <div class="field">
-        <label for="fType">類型</label>
-        <select id="fType">
-          <option value="dr">Dr. 收入（佢爭少）</option>
-          <option value="cr">Cr. 支出（佢爭多）</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="fAmt">金額 *</label>
-        <input id="fAmt" type="number" inputmode="decimal" step="0.01" min="0.01" placeholder="0.00"/>
-      </div>
+<button class="fab" onclick="openForm()">+</button>
+
+<!-- Entry Form Popup -->
+<div class="lop" id="lop" onclick="handleLopClick(event)">
+  <div class="lop-box">
+    <div class="lop-handle"></div>
+    <div class="lop-head">
+      <span class="lop-title">記帳</span>
+      <button class="icon-btn" onclick="closeForm()" style="font-size:1.2rem;">&#10005;</button>
     </div>
-    <div class="btn-row">
-      <button type="button" class="clear-btn" id="clearBtn">清除</button>
-      <button type="button" class="save-btn" id="saveBtn">✓ 寫入 Google Sheet</button>
+    <div class="lop-body">
+      <!-- Date with Today button -->
+      <div class="field">
+        <label>日期</label>
+        <div class="date-row">
+          <div class="field">
+            <input type="date" id="fDate" required/>
+          </div>
+          <button type="button" class="today-btn" onclick="setToday()">Today</button>
+        </div>
+      </div>
+      <!-- Item description with datalist -->
+      <div class="field">
+        <label>摘要（項目）</label>
+        <input type="text" id="fDesc" list="descList" autocomplete="off" placeholder="Enter or choose item"/>
+        <datalist id="descList"></datalist>
+      </div>
+      <!-- Dr / Cr amounts -->
+      <div class="amt-row">
+        <div class="field">
+          <label>Dr. （支出）</label>
+          <input type="number" id="fDr" step="0.01" min="0" placeholder="0.00"/>
+        </div>
+        <div class="field">
+          <label>Cr. （收入）</label>
+          <input type="number" id="fCr" step="0.01" min="0" placeholder="0.00"/>
+        </div>
+      </div>
+      <!-- Note -->
+      <div class="field">
+        <label>備註（可略）</label>
+        <input type="text" id="fNote" placeholder="Optional note"/>
+      </div>
+      <div id="formMsg" style="font-size:.85rem;color:var(--dr);margin-bottom:.5rem;"></div>
+      <button onclick="submitEntry()" style="width:100%;padding:.9rem;background:var(--pri);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;">Save Entry</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────
-  const API = 'https://script.google.com/macros/s/AKfycbwGfSZYDY6l41RwYbmvZwthF662_gmexHxr97B0RQWxlCBbJMzaZz6T42XdOiHNp5_-AQ/exec';
-// ────────────────────────────────────────────────────────
+const API = 'https://script.google.com/macros/s/AKfycbzE8c3YuKh0fChJMKFf5zZQ23-izqCv6q7ue87oBPRtXtOzEk/exec';
+const SS_ID = '1HovvPH1PjSXMGoJYDveAhj-X-zigGp1cjdKFw2soA4g';
 
-let allData = {}, sortedKeys = [], curKey = '', searchTerm = '';
+let allSheets = [];
+let currentSheet = '';
+let descriptions = [];
 
-function parseKey(n) {
-  n = (n||'').replace(/\s+/g,'').replace(/\n/g,'');
-  let m = n.match(/^(\d{4})年(\d{1,2})月/);
-  if (m) return {y:+m[1],mo:+m[2]};
-  m = n.match(/^(\d{1,2})月(\d{4})/);
-  if (m) return {y:+m[2],mo:+m[1]};
-  m = n.match(/^(\d{1,2})月$/);
-  if (m) return {y:2025,mo:+m[1]};
-  return null;
+// ── Init ──
+async function init() {
+  applyTheme();
+  await loadSheets();
+  setToday();
+  loadDescriptions();
 }
 
-function sortKeys(keys) {
-  return keys
-    .filter(k => parseKey(k) && !k.includes('副本'))
-    .sort((a,b)=>{
-      const pa=parseKey(a),pb=parseKey(b);
-      if(!pa||!pb) return 0;
-      return pa.y!==pb.y ? pa.y-pb.y : pa.mo-pb.mo;
-    });
+// ── Theme ──
+function applyTheme() {
+  const t = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
 }
 
-function isNeg(s){ return s && s.toString().trim().startsWith('-'); }
-function toNum(s){ if(!s) return 0; const n=parseFloat(s.toString().replace(/[$,]/g,'')); return isNaN(n)?0:n; }
-function fmt(n){ return (n<0?'-$':'$')+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-
-function showToast(msg, type=''){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='toast show'+(type?' '+type:'');
-  clearTimeout(t._t);
-  t._t=setTimeout(()=>t.className='toast',3000);
+// ── Set Today's date ──
+function setToday() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const d = String(now.getDate()).padStart(2,'0');
+  document.getElementById('fDate').value = `${y}-${m}-${d}`;
 }
 
-function setStatus(type,txt){
-  document.getElementById('sdot').className='sdot'+(type==='loading'?' loading':type==='error'?' error':'');
-  document.getElementById('stxt').textContent=txt;
+// ── Sheet name from date ──
+function sheetNameFromDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m] = dateStr.split('-');
+  const month = parseInt(m);
+  const year = parseInt(y);
+  // Use format like existing tabs: e.g. "4月 2026"
+  return `${month}月 ${year}`;
 }
 
-function renderMonth(key){
-  const rows=allData[key];
-  document.getElementById('curMonthChip').textContent=key.replace(/\s+/g,' ').trim();
-  if(!rows||rows.length<2){
-    document.getElementById('tbody').innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);font-size:var(--text-sm)">沒有資料</td></tr>';
-    return;
-  }
-  const dataRows=rows.slice(1);
-  const kw=searchTerm.toLowerCase();
-
-  let lastBal='';
-  for(let i=dataRows.length-1;i>=0;i--){
-    if(dataRows[i][5]&&dataRows[i][5]!==''){lastBal=dataRows[i][5];break;}
-  }
-
-  document.getElementById('mTitle').textContent=key.replace(/\s+/g,' ').trim();
-  document.getElementById('mMeta').textContent='月初承接上月尾數 · 月尾保留家用 Dr. $5,000';
-  const pill=document.getElementById('balPill');
-  pill.textContent=lastBal||'—';
-  pill.className='bal-pill'+(isNeg(lastBal)?' neg':'');
-
-  let tDr=0,tCr=0;
-  dataRows.forEach(r=>{tDr+=toNum(r[3]);tCr+=toNum(r[4]);});
-  const net=tDr-tCr;
-  document.getElementById('sumSec').style.display='';
-  document.getElementById('sumGrid').innerHTML=`
-    <div class="sum-item"><div class="s-lbl">總 Dr.（收入）</div><div class="s-val pos">${fmt(tDr)}</div></div>
-    <div class="sum-item"><div class="s-lbl">總 Cr.（支出）</div><div class="s-val neg">${fmt(tCr)}</div></div>
-    <div class="sum-item"><div class="s-lbl">本月淨變動</div><div class="s-val ${net<0?'neg':'pos'}">${fmt(net)}</div></div>
-                    <td class="bal ${isNeg(bal)?'neg':'pos'}">${bal?(parseFloat(bal).toFixed(2)):''}</td>  `;
-
-  const filtered=dataRows.filter(r=>!kw||(r[0]+r[1]+r[2]+r[3]+r[4]+r[5]).toLowerCase().includes(kw));
-  if(!filtered.length){
-    document.getElementById('tbody').innerHTML='<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted);font-size:var(--text-sm)">沒有符合記錄</td></tr>';
-    return;
-  }
-  document.getElementById('tbody').innerHTML=filtered.map(r=>{
-    const [date,item,note,dr,cr,bal]=r;
-    const isOpen=(!date||date==='')&&(item||'').includes('尾數');
-    const isClose=item==='家用';
-    const hasDr=dr&&dr!==''; const hasCr=cr&&cr!=='';
-    const cls=[isOpen?'open-r':'',isClose?'close-r':'',hasDr?'dr-r':'',hasCr?'cr-r':''].filter(Boolean).join(' ');
-    return `<tr class="${cls}">
-      <td>${date||''}</td><td>${item||''}</td>
-      <td style="color:var(--muted)">${note||''}</td>
-      <td class="num drv">${hasDr?dr:''}</td>
-      <td class="num crv">${hasCr?cr:''}</td>
-      <td class="bal ${isNeg(bal)?'neg':'pos'}">${bal||''}</td>
-    </tr>`;
-  }).join('');
-}
-
-function populateSel(){
-  const sel=document.getElementById('monthSel');
-  sel.innerHTML=sortedKeys.map(k=>`<option value="${k}">${k.replace(/\s+/g,' ').trim()}</option>`).join('');
-  sel.value=curKey;
-}
-
-async function loadData(){
-  const btn=document.getElementById('refBtn');
-  btn.classList.add('spinning');
-  setStatus('loading','正在從 Google Sheet 載入最新數據…');
+// ── Load Sheets ──
+async function loadSheets() {
   try {
-    // Use no-cors-safe GET with jsonp-style via script tag for read
-    const res=await fetch(API+'?action=read',{method:'GET'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const json=await res.json();
-    allData=json;
-    sortedKeys=sortKeys(Object.keys(allData));
-    if(!sortedKeys.length) throw new Error('找不到有效月份 Tab');
-    if(!curKey||!sortedKeys.includes(curKey)) curKey=sortedKeys[sortedKeys.length-1];
-    populateSel();
-    renderMonth(curKey);
-    const now=new Date().toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'});
-    setStatus('ok',`已同步 · ${now} · 共 ${sortedKeys.length} 個月份`);
-  } catch(e){
-    setStatus('error','載入失敗：'+e.message);
-    showToast('載入失敗：'+e.message,'err');
-  } finally {
-    btn.classList.remove('spinning');
-  }
-}
-
-// ── WRITE via GET params (avoids CORS preflight) ──────
-async function writeEntry(payload){
-  const params=new URLSearchParams({
-    action:'write',
-    sheetName: payload.sheetName,
-    date:      payload.date||'',
-    item:      payload.item||'',
-    note:      payload.note||'',
-    dr:        payload.dr||0,
-    cr:        payload.cr||0
-  });
-  // Use fetch GET — Apps Script doGet handles action=write
-  const res=await fetch(API+'?'+params.toString(),{method:'GET'});
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  return await res.json();
-}
-
-// ── FORM ──────────────────────────────────────────────
-const panel=document.getElementById('formPanel');
-document.getElementById('formToggle').addEventListener('click',()=>{
-  panel.classList.toggle('collapsed');
-});
-
-document.getElementById('clearBtn').addEventListener('click',()=>{
-  ['fDate','fItem','fNote','fAmt'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('fType').value='dr';
-});
-
-document.getElementById('saveBtn').addEventListener('click', async()=>{
-  const item=document.getElementById('fItem').value.trim();
-  const amt=parseFloat(document.getElementById('fAmt').value);
-  if(!item){showToast('請填寫項目','err');document.getElementById('fItem').focus();return;}
-  if(!amt||amt<=0){showToast('請填寫正確金額','err');document.getElementById('fAmt').focus();return;}
-
-  const type=document.getElementById('fType').value;
-  const btn=document.getElementById('saveBtn');
-  btn.disabled=true; btn.textContent='儲存中…';
-
-  try {
-    const result=await writeEntry({
-                  sheetName: (()=>{const _d=document.getElementById('fDate').value.trim();const _m=_d.match(/\/(\d{1,2})$/);if(_m){const _k=parseKey(curKey);const _yr=_k?_k.y:new Date().getFullYear();return parseInt(_m[1])+'月'+_yr;}return curKey;})(),
-      date:  document.getElementById('fDate').value.trim(),
-      item,
-      note:  document.getElementById('fNote').value.trim(),
-      dr:    type==='dr'?amt:0,
-      cr:    type==='cr'?amt:0
+    const res = await fetch(`${API}?action=read`);
+    const data = await res.json();
+    allSheets = Object.keys(data).filter(k => k.match(/^\d+月/));
+    // Sort chronologically
+    allSheets.sort((a,b) => {
+      const [ma,ya] = a.split(/[月\s]+/);
+      const [mb,yb] = b.split(/[月\s]+/);
+      return (parseInt(ya||0)*12+parseInt(ma)) - (parseInt(yb||0)*12+parseInt(mb));
     });
-    if(result.status==='ok'){
-      showToast('✓ 已儲存！新總額：'+result.newTotal,'ok');
-      ['fDate','fItem','fNote','fAmt'].forEach(id=>document.getElementById(id).value='');
-      document.getElementById('fType').value='dr';
-      panel.classList.add('collapsed');
-      await loadData();
-    } else {
-      throw new Error(result.error||'未知錯誤');
+    // Populate sheet selector
+    const sel = document.getElementById('sheetSelect');
+    sel.innerHTML = '';
+    allSheets.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      sel.appendChild(opt);
+    });
+    // Show latest sheet by default
+    if (allSheets.length > 0) {
+      currentSheet = allSheets[allSheets.length - 1];
+      sel.value = currentSheet;
+      renderSheet(data[currentSheet], currentSheet);
     }
-  } catch(err){
-    showToast('儲存失敗：'+err.message,'err');
-  } finally {
-    btn.disabled=false; btn.textContent='✓ 寫入 Google Sheet';
+  } catch(e) {
+    document.getElementById('balanceTxt').textContent = 'Error loading data';
   }
-});
+}
 
-document.getElementById('monthSel').addEventListener('change',e=>{curKey=e.target.value;renderMonth(curKey);});
-document.getElementById('searchInp').addEventListener('input',e=>{searchTerm=e.target.value.trim();if(curKey)renderMonth(curKey);});
-document.getElementById('refBtn').addEventListener('click',loadData);
+// ── Switch Sheet ──
+async function switchSheet(name) {
+  currentSheet = name;
+  document.getElementById('sheetLabel').textContent = name;
+  try {
+    const res = await fetch(`${API}?action=read`);
+    const data = await res.json();
+    renderSheet(data[name], name);
+  } catch(e) {}
+}
 
-// ── THEME ─────────────────────────────────────────────
-(function(){
-  const btn=document.querySelector('[data-theme-toggle]');
-  const html=document.documentElement;
-  let dark=window.matchMedia('(prefers-color-scheme:dark)').matches;
-  html.setAttribute('data-theme',dark?'dark':'light');
-  btn.textContent=dark?'☀️':'🌙';
-  btn.addEventListener('click',()=>{dark=!dark;html.setAttribute('data-theme',dark?'dark':'light');btn.textContent=dark?'☀️':'🌙';});
-})();
+// ── Render Sheet ──
+function renderSheet(rows, name) {
+  document.getElementById('sheetLabel').textContent = name || '';
+  const tbody = document.getElementById('ledgerBody');
+  tbody.innerHTML = '';
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);">No entries yet</td></tr>';
+    return;
+  }
+  let lastBalance = 0;
+  rows.forEach((row, i) => {
+    if (i === 0) return; // skip header
+    const [date, time, desc, dr, cr, total] = row;
+    const tr = document.createElement('tr');
+    const drVal = parseFloat(dr) || 0;
+    const crVal = parseFloat(cr) || 0;
+    const totVal = parseFloat(String(total).replace(/[^\d.-]/g,'')) || 0;
+    lastBalance = totVal;
+    const isClosing = String(desc).includes('尾數');
+    if (isClosing) tr.className = 'closing-row';
+    tr.innerHTML = `
+      <td>${date||''}<br/><span style="color:var(--muted);font-size:.7rem;">${desc||''}</span></td>
+      <td>${drVal > 0 ? '<span class="rdr">-'+drVal.toLocaleString('zh-HK',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>' : ''}</td>
+      <td>${crVal > 0 ? '<span class="rcr">+'+crVal.toLocaleString('zh-HK',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>' : ''}</td>
+      <td class="rtot" style="padding:.55rem .75rem;">$${totVal.toLocaleString('zh-HK',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  // Update balance display
+  const balEl = document.getElementById('balanceTxt');
+  balEl.textContent = `結餘: $${lastBalance.toLocaleString('zh-HK',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  document.getElementById('sdot').classList.remove('loading');
+}
 
-loadData();
+// ── Load Descriptions ──
+async function loadDescriptions() {
+  try {
+    const res = await fetch(`${API}?action=getDescriptions`);
+    const data = await res.json();
+    descriptions = data.descriptions || [];
+    const dl = document.getElementById('descList');
+    dl.innerHTML = '';
+    descriptions.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d;
+      dl.appendChild(opt);
+    });
+  } catch(e) {}
+}
+
+// ── Form ──
+function openForm() {
+  setToday();
+  document.getElementById('fDesc').value = '';
+  document.getElementById('fDr').value = '';
+  document.getElementById('fCr').value = '';
+  document.getElementById('fNote').value = '';
+  document.getElementById('formMsg').textContent = '';
+  document.getElementById('lop').classList.add('open');
+}
+function closeForm() {
+  document.getElementById('lop').classList.remove('open');
+}
+function handleLopClick(e) {
+  if (e.target === document.getElementById('lop')) closeForm();
+}
+
+// ── Submit Entry ──
+async function submitEntry() {
+  const dateVal = document.getElementById('fDate').value;
+  const desc = document.getElementById('fDesc').value.trim();
+  const dr = parseFloat(document.getElementById('fDr').value) || 0;
+  const cr = parseFloat(document.getElementById('fCr').value) || 0;
+  const note = document.getElementById('fNote').value.trim();
+  const msgEl = document.getElementById('formMsg');
+  
+  if (!dateVal) { msgEl.textContent = '請選擇日期'; return; }
+  if (!desc) { msgEl.textContent = '請輸入摘要'; return; }
+  if (dr === 0 && cr === 0) { msgEl.textContent = '請輸入 Dr. 或 Cr. 金額'; return; }
+  
+  msgEl.textContent = 'Saving...';
+  
+  // Build sheet name from selected date
+  const sheetName = sheetNameFromDate(dateVal);
+  
+  const descFull = note ? `${desc}${note ? ' ('+note+')' : ''}` : desc;
+  
+  const url = `${API}?action=write&sheetName=${encodeURIComponent(sheetName)}&date=${encodeURIComponent(dateVal)}&time=${encodeURIComponent(new Date().toTimeString().slice(0,5))}&desc=${encodeURIComponent(descFull)}&dr=${dr}&cr=${cr}`;
+  
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) { msgEl.textContent = 'Error: ' + data.error; return; }
+    msgEl.style.color = 'var(--cr)';
+    msgEl.textContent = 'Saved!';
+    // If new sheet, add to selector
+    if (!allSheets.includes(sheetName)) {
+      allSheets.push(sheetName);
+      allSheets.sort((a,b) => {
+        const [ma,ya] = a.split(/[月\s]+/);
+        const [mb,yb] = b.split(/[月\s]+/);
+        return (parseInt(ya||0)*12+parseInt(ma)) - (parseInt(yb||0)*12+parseInt(mb));
+      });
+      const sel = document.getElementById('sheetSelect');
+      const opt = document.createElement('option');
+      opt.value = sheetName; opt.textContent = sheetName;
+      sel.appendChild(opt);
+    }
+    currentSheet = sheetName;
+    document.getElementById('sheetSelect').value = sheetName;
+    // Reload descriptions and data
+    await loadDescriptions();
+    setTimeout(() => {
+      closeForm();
+      switchSheet(sheetName);
+    }, 800);
+  } catch(e) {
+    msgEl.style.color = 'var(--dr)';
+    msgEl.textContent = 'Network error. Try again.';
+  }
+}
+
+init();
 </script>
 </body>
 </html>
