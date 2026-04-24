@@ -224,7 +224,7 @@ function sheetNameFromDate(dateStr) {
 // ── Load Sheets ──
 async function loadSheets() {
   try {
-    const const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),15000);const res = await fetch(`${API}?action=read`, {redirect:'follow',signal:ctrl.signal});
+        const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),15000);const res = await fetch(`${API}?action=read`, {redirect:'follow',signal:ctrl.signal});
     const data = await res.json();
         allSheets = Object.keys(data).filter(k => k && !k.startsWith('testing'));
     // Sort chronologically
@@ -246,7 +246,7 @@ async function loadSheets() {
       currentSheet = allSheets[allSheets.length - 1];
       sel.value = currentSheet;
       renderSheet(data[currentSheet], currentSheet);
-    } else { document.getElementById('sheetLabel').textContent = 'N='+Object.keys(data).length; }
+        }
   } catch(e) {
     document.getElementById('balanceTxt').textContent = 'Error: '+e.message;
   }
@@ -257,7 +257,7 @@ async function switchSheet(name) {
   currentSheet = name;
   document.getElementById('sheetLabel').textContent = name;
   try {
-    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),15000);const res = await fetch(`${API}?action=read`, {redirect:'follow',signal:ctrl.signal});
+        const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),15000);const res = await fetch(`${API}?action=read`, {redirect:'follow',signal:ctrl.signal});
     const data = await res.json();
     renderSheet(data[name], name);
   } catch(e) {}
