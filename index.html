@@ -346,8 +346,7 @@ function renderMonth(key){
     <div class="sum-item"><div class="s-lbl">總 Dr.（收入）</div><div class="s-val pos">${fmt(tDr)}</div></div>
     <div class="sum-item"><div class="s-lbl">總 Cr.（支出）</div><div class="s-val neg">${fmt(tCr)}</div></div>
     <div class="sum-item"><div class="s-lbl">本月淨變動</div><div class="s-val ${net<0?'neg':'pos'}">${fmt(net)}</div></div>
-    <div class="sum-item"><div class="s-lbl">月尾總額</div><div class="s-val ${isNeg(lastBal)?'neg':'pos'}">${lastBal||'—'}</div></div>
-  `;
+                    <td class="bal ${isNeg(bal)?'neg':'pos'}">${bal?(parseFloat(bal).toFixed(2)):''}</td>  `;
 
   const filtered=dataRows.filter(r=>!kw||(r[0]+r[1]+r[2]+r[3]+r[4]+r[5]).toLowerCase().includes(kw));
   if(!filtered.length){
