@@ -224,7 +224,7 @@ function sheetNameFromDate(dateStr) {
 // ── Load Sheets ──
 async function loadSheets() {
   try {
-    const const res = await fetch(`${API}?action=read`, {redirect:'follow'});
+    const const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),15000);const res = await fetch(`${API}?action=read`, {redirect:'follow',signal:ctrl.signal});
     const data = await res.json();
         allSheets = Object.keys(data).filter(k => k && !k.startsWith('testing'));
     // Sort chronologically
@@ -257,7 +257,7 @@ async function switchSheet(name) {
   currentSheet = name;
   document.getElementById('sheetLabel').textContent = name;
   try {
-    const res = await fetch(`${API}?action=read`, {redirect:'follow'});
+    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),15000);const res = await fetch(`${API}?action=read`, {redirect:'follow',signal:ctrl.signal});
     const data = await res.json();
     renderSheet(data[name], name);
   } catch(e) {}
