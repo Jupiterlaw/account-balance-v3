@@ -226,7 +226,7 @@ async function loadSheets() {
   try {
     const const res = await fetch(`${API}?action=read`);
     const data = await res.json();
-    allSheets = Object.keys(data).filter(k => k.match(/^\d+月/));
+        allSheets = Object.keys(data).filter(k => k && !k.startsWith('testing'));
     // Sort chronologically
     allSheets.sort((a,b) => {
       const [ma,ya] = a.split(/[月\s]+/);
