@@ -441,7 +441,7 @@ document.getElementById('saveBtn').addEventListener('click', async()=>{
 
   try {
     const result=await writeEntry({
-      sheetName: curKey,
+                  sheetName: (()=>{const _d=document.getElementById('fDate').value.trim();const _m=_d.match(/\/(\d{1,2})$/);if(_m){const _k=parseKey(curKey);const _yr=_k?_k.y:new Date().getFullYear();return parseInt(_m[1])+'月'+_yr;}return curKey;})(),
       date:  document.getElementById('fDate').value.trim(),
       item,
       note:  document.getElementById('fNote').value.trim(),
