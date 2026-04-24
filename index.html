@@ -224,7 +224,7 @@ function sheetNameFromDate(dateStr) {
 // ── Load Sheets ──
 async function loadSheets() {
   try {
-    const const res = await fetch(`${API}?action=read`);
+    const const res = await fetch(`${API}?action=read`, {redirect:'follow'});
     const data = await res.json();
         allSheets = Object.keys(data).filter(k => k && !k.startsWith('testing'));
     // Sort chronologically
@@ -257,7 +257,7 @@ async function switchSheet(name) {
   currentSheet = name;
   document.getElementById('sheetLabel').textContent = name;
   try {
-    const res = await fetch(`${API}?action=read`);
+    const res = await fetch(`${API}?action=read`, {redirect:'follow'});
     const data = await res.json();
     renderSheet(data[name], name);
   } catch(e) {}
@@ -300,7 +300,7 @@ function renderSheet(rows, name) {
 // ── Load Descriptions ──
 async function loadDescriptions() {
   try {
-    const res = await fetch(`${API}?action=getDescriptions`);
+    const res = await fetch(`${API}?action=getDescriptions`, {redirect:'follow'});
     const data = await res.json();
     descriptions = data.descriptions || [];
     const dl = document.getElementById('descList');
