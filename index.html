@@ -248,7 +248,7 @@ async function loadSheets() {
       renderSheet(data[currentSheet], currentSheet);
     } else { document.getElementById('sheetLabel').textContent = 'N='+Object.keys(data).length; }
   } catch(e) {
-    document.getElementById('balanceTxt').textContent = 'Error loading data';
+    document.getElementById('balanceTxt').textContent = 'Error: '+e.message;
   }
 }
 
