@@ -225,7 +225,7 @@ function sheetNameFromDate(dateStr) {
 // ── Load Sheets ──
 async function loadSheets() {
   try {
-    const res = await fetch(`${API}?action=read`);
+    const const res = await fetch(`${API}?action=read`);
     const data = await res.json();
     allSheets = Object.keys(data).filter(k => k.match(/^\d+月/));
     // Sort chronologically
